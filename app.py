@@ -6,8 +6,6 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
-from langchain.chains import create_retrieval_chain
-from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.agents import initialize_agent, Tool, AgentType
 
@@ -90,20 +88,20 @@ if api_key:
         st.chat_message("user").write(user_input)
 
         if vectorstore and any(word in user_input for word in ["سياسة", "قانون", "مسموح", "ممنوع", "إجراء"]):
-            prompt_template = ChatPromptTemplate.from_template("""
-            أنت مساعد أمن سيبراني احترافي. أجب عن السؤال بناءً على المستندات فقط.
-            قم بصياغة الإجابة دائماً على شكل هيكل JSON يحتوي على الحقول: (question, answer, compliance_status).
+            prompt = ChatPromptTemplate.from_template("""
+            أنت مساعد أمن سيبراني احترافي. أجب عن السؤال بناءً على المستندات التالية فقط وبصياغة JSON تحتوي (question, answer, compliance_status):
             
-            <context>
+            المستندات:
             {context}
-            </context>
             
-            السؤال: {input}
+            السؤال: {question}
             """)
-            combine_chain = create_stuff_documents_chain(llm, prompt_template)
-            rag_chain = create_retrieval_chain(vectorstore.as_retriever(), combine_chain)
-            res = rag_chain.invoke({"input": user_input})
-            st.chat_message("assistant").code(res["answer"], language="json")
+            retriever = vectorstore.as_retriever()
+            matched_docs = retriever.invoke(user_input)
+            context_text = "\n\n".join([d.page_content for d in matched_docs])
+            chain = prompt | llm
+            res = chain.invoke({"context": context_text, "question": user_input})
+            st.chat_message("assistant").code(res.content, language="json")
         else:
             res = cyber_agent.run(user_input)
             st.chat_message("assistant").write(res)

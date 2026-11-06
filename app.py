@@ -7,7 +7,6 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
-from langchain.agents import initialize_agent, Tool, AgentType
 
 st.set_page_config(page_title="المساعد السيبراني الذكي", page_icon="🛡️", layout="wide")
 st.title("🛡️ نظام إدارة واستجابة الحوادث السيبرانية (CyberAgent AI)")
@@ -51,26 +50,6 @@ if api_key:
         except Exception:
             return json.dumps({"error": "Invalid calculation input"})
 
-    agent_tools = [
-        Tool(
-            name="IP_Domain_Checker",
-            func=check_ip_domain_risk,
-            description="مفيدة لفحص النطاقات والأذونات وعناوين IP لمعرفة مدى خطورتها."
-        ),
-        Tool(
-            name="Risk_Calculator",
-            func=calculate_risk_score,
-            description="مفيدة لحساب وتقييم مستويات الخطورة بناءً على الأرقام والمعطيات."
-        )
-    ]
-
-    cyber_agent = initialize_agent(
-        tools=agent_tools,
-        llm=llm,
-        agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-        verbose=True
-    )
-
     st.subheader("📷 فحص الشاشات والرسائل المشبوهة (Vision AI)")
     uploaded_img = st.file_uploader("رفع صورة لرسالة بريد أو شاشة مشبوهة", type=["png", "jpg", "jpeg"])
     
@@ -102,8 +81,14 @@ if api_key:
             chain = prompt | llm
             res = chain.invoke({"context": context_text, "question": user_input})
             st.chat_message("assistant").code(res.content, language="json")
+        elif any(word in user_input for word in ["فحص", "رابط", "ip", "عنوان", "نطاق"]):
+            ip_res = check_ip_domain_risk(user_input)
+            st.chat_message("assistant").code(ip_res, language="json")
+        elif any(word in user_input for word in ["حساب", "نسبة", "مستوى", "درجة"]):
+            calc_res = calculate_risk_score(user_input)
+            st.chat_message("assistant").code(calc_res, language="json")
         else:
-            res = cyber_agent.run(user_input)
-            st.chat_message("assistant").write(res)
+            res = llm.invoke(user_input)
+            st.chat_message("assistant").write(res.content)
 else:
     st.info("💡 يرجى إدخال مفتاح OpenAI API في الشريط الجانبي لتشغيل التطبيق.")

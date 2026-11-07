@@ -33,23 +33,21 @@ st.markdown("""
         color: #F8FAFC;
         border-bottom: 2px solid #1E293B;
         padding-bottom: 14px;
-        margin-bottom: 24px;
+        margin-bottom: 20px;
         letter-spacing: -0.5px;
     }
     .sub-header {
-        font-size: 16px;
+        font-size: 15px;
         font-weight: 600;
         color: #94A3B8;
-        margin-top: 24px;
-        margin-bottom: 12px;
-        text-transform: uppercase;
+        margin-bottom: 10px;
     }
     .stButton>button {
         background-color: #2563EB;
         color: #FFFFFF;
         border-radius: 6px;
         border: none;
-        padding: 10px 20px;
+        padding: 8px 16px;
         font-weight: 600;
         font-family: 'IBM Plex Sans Arabic', sans-serif;
         width: 100%;
@@ -63,10 +61,6 @@ st.markdown("""
         border: 1px solid #334155;
         border-radius: 6px;
     }
-    .sidebar .sidebar-content {
-        background-color: #111827;
-        border-left: 1px solid #1F2937;
-    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -74,15 +68,25 @@ st.markdown("""
 st.markdown('<div class="main-header">منظومة الاستجابة والتحليل الأمني - CyberAgent AI</div>', unsafe_allow_html=True)
 
 with st.sidebar:
-    st.markdown("### المصادقة والإعدادات")
+    st.markdown("### إعدادات النظام")
     api_key = st.text_input("مفتاح OpenAI API:", type="password")
-    st.markdown("---")
-    st.markdown("### قاعدة معرفة السياسات (RAG)")
-    uploaded_pdf = st.file_uploader("رفع وثيقة السياسات الأمنية (PDF)", type=["pdf"])
 
 if api_key:
     os.environ["OPENAI_API_KEY"] = api_key
     llm = ChatOpenAI(model="gpt-4o", temperature=0.1)
+
+    # ---------------------------------------------------------
+    # منطقة المدخلات التفاعلية الموحدة (مركز العمليات الرئيسي)
+    # ---------------------------------------------------------
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown('<div class="sub-header">📚 رفع وثيقة السياسات الأمنية (PDF)</div>', unsafe_allow_html=True)
+        uploaded_pdf = st.file_uploader("اختر ملف السياسات لتخزينه في Chroma DB", type=["pdf"], key="pdf_uploader")
+
+    with col2:
+        st.markdown('<div class="sub-header">🖼️ رفع الأدلة البصرية للتحليل (Vision AI)</div>', unsafe_allow_html=True)
+        uploaded_img = st.file_uploader("اختر صورة الشاشة أو البريد المشبوه", type=["png", "jpg", "jpeg"], key="img_uploader")
 
     vectorstore = None
     if uploaded_pdf:
@@ -96,7 +100,38 @@ if api_key:
         
         embeddings = OpenAIEmbeddings()
         vectorstore = Chroma.from_documents(documents=splits, embedding=embeddings)
-        st.sidebar.success("تم تشفير وتخزين سياسات الأمن في Chroma DB بنجاح!")
+        st.success("تم تشفير وتخزين سياسات الأمن في Chroma DB بنجاح!")
+
+    if uploaded_img:
+        st.image(uploaded_img, caption="العينة المرفوعة للفحص البصري", width=350)
+        if st.button("بدء التحليل البصري للأدلة"):
+            st.info("جاري فحص المؤشرات البصرية والنصوص باستخدام Multimodal AI...")
+            vision_result = {
+                "analysis_type": "Multimodal Visual Threat Inspection",
+                "detection": "محاولة تصيد إلكتروني (Phishing Attempt)",
+                "risk_level": "مرتفع جداً (Critical)",
+                "details": [
+                    "شعارات ومُدخلات مزيفة تقلد الواجهات الرسمية للشركة.",
+                    "استخدام حقول إدخال بيانات حساسة عبر بروتوكولات غير آمنة.",
+                    "وجود نصوص تحث على الاستعجال لاتخاذ إجراء غير آمن."
+                ],
+                "recommendation": "تنبيه الموظفين وإغلاق الجلسة فوراً."
+            }
+            
+            st.markdown(f"""
+### 🖼️ تقرير التحليل البصري للتهديدات
+
+* **نوع الكشف:** **{vision_result['detection']}**
+* **مستوى الخطورة:** `{vision_result['risk_level']}`
+* **التوصية المباشرة:** {vision_result['recommendation']}
+
+**أسباب الشبهات والدلائل البصرية:**
+""")
+            for detail in vision_result["details"]:
+                st.markdown(f"- {detail}")
+                
+            with st.expander("عرض سجل البيانات البرمجية (JSON)"):
+                st.code(json.dumps(vision_result, ensure_ascii=False, indent=2), language="json")
 
     def check_ip_domain_risk(query: str) -> dict:
         clean_query = query.strip()
@@ -141,47 +176,12 @@ if api_key:
         except Exception:
             return {"error": "تعذر حساب المعطيات المدخلة بشكل صحيح"}
 
-    # قسم الفحص البصري والتحليل (Vision AI)
-    st.markdown('<div class="sub-header">وحدة الفحص البصري وتحليل الأدلة (Vision AI)</div>', unsafe_allow_html=True)
-    uploaded_img = st.file_uploader("رفع صورة الشاشة أو البريد المشبوه للتحليل", type=["png", "jpg", "jpeg"])
-    
-    if uploaded_img:
-        st.image(uploaded_img, caption="العينة المرفوعة للفحص", width=400)
-        if st.button("بدء التحليل البصري للأدلة"):
-            st.info("جاري فحص المؤشرات البصرية والنصوص باستخدام Multimodal AI...")
-            
-            vision_result = {
-                "analysis_type": "Multimodal Visual Threat Inspection",
-                "detection": "محاولة تصيد إلكتروني (Phishing Attempt)",
-                "risk_level": "مرتفع جداً (Critical)",
-                "details": [
-                    "شعارات ومُدخلات مزيفة تقلد الواجهات الرسمية للشركة.",
-                    "استخدام حقول إدخال بيانات حساسة عبر بروتوكولات غير آمنة.",
-                    "وجود نصوص تحث على الاستعجال لاتخاذ إجراء غير آمن."
-                ],
-                "recommendation": "تنبيه الموظفين وإغلاق الجلسة فوراً."
-            }
-            
-            # تقرير عربي تفصيلي للفحص البصري
-            st.markdown(f"""
-### 🖼️ تقرير التحليل البصري للتهديدات
-
-* **نوع الكشف:** **{vision_result['detection']}**
-* **مستوى الخطورة:** `{vision_result['risk_level']}`
-* **التوصية المباشرة:** {vision_result['recommendation']}
-
-**أسباب الشبهات والدلائل البصرية:**
-""")
-            for detail in vision_result["details"]:
-                st.markdown(f"- {detail}")
-                
-            with st.expander("عرض سجل البيانات البرمجية (JSON)"):
-                st.code(json.dumps(vision_result, ensure_ascii=False, indent=2), language="json")
-
     st.markdown("---")
     
-    # وحدة التفاعل والاستعلامات
-    st.markdown('<div class="sub-header">منصة الاستعلامات والعمليات الأمنية</div>', unsafe_allow_html=True)
+    # ---------------------------------------------------------
+    # وحدة التفاعل والاستعلامات (الشات الرئيسي)
+    # ---------------------------------------------------------
+    st.markdown('<div class="sub-header">💬 وحدة الاستعلامات المباشرة والأدوات الأمنية</div>', unsafe_allow_html=True)
     user_input = st.chat_input("أدخل الاستفسار، أو سؤال عن السياسات، أو رابط/IP للفحص...")
 
     if user_input:
@@ -223,7 +223,6 @@ if api_key:
 
         elif any(word in user_input for word in ["فحص", "رابط", "ip", "عنوان", "نطاق", "دومين"]):
             res_data = check_ip_domain_risk(user_input)
-            
             report = f"""
 ### 📋 تقرير فحص الأمان والسلامة
 

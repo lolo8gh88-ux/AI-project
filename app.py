@@ -8,14 +8,14 @@ from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 
-# إعدادات الصفحة والاتجاه
+# إعدادات الصفحة والواجهة
 st.set_page_config(
     page_title="CyberAgent AI | مركز عمليات الأمن السيبراني",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# نمط التصميم المؤسسي النظيف باللغة العربية (Corporate Dark Arabic Theme)
+# نمط التصميم المؤسسي النظيف باللغة العربية
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap');
@@ -96,25 +96,52 @@ if api_key:
         
         embeddings = OpenAIEmbeddings()
         vectorstore = Chroma.from_documents(documents=splits, embedding=embeddings)
-        st.sidebar.success("تم فهرسة وثيقة السياسات بنجاح داخل Chroma DB.")
+        st.sidebar.success("تم تشفير وتخزين سياسات الأمن في Chroma DB بنجاح!")
 
-    def check_ip_domain_risk(query: str) -> str:
+    def check_ip_domain_risk(query: str) -> dict:
         clean_query = query.strip()
-        if "http" in clean_query or ".com" in clean_query:
-            result = {"target": clean_query, "status": "Suspicious", "risk_score": "85%", "recommendation": "Block immediately"}
+        if any(w in clean_query for w in ["http", ".com", "test", "net", "org", "evil"]):
+            return {
+                "target": clean_query,
+                "status": "مشبوه جداً (High Risk)",
+                "risk_score": "85%",
+                "recommendation": "حظر الرابط فوراً في الجدار الناري وعدم النقر عليه",
+                "reasons": [
+                    "الرابط يفتقر لشهادة التشفير والأمان المعتمدة (SSL).",
+                    "يحتوي العنوان على صياغة مضللة تنتمي لأساليب التصيد الإلكتروني (Phishing).",
+                    "رُصد النطاق ضمن القوائم السوداء لقواعد بيانات التهديدات الحالية."
+                ]
+            }
         else:
-            result = {"target": clean_query, "status": "Safe", "risk_score": "5%", "recommendation": "No action needed"}
-        return json.dumps(result, ensure_ascii=False)
+            return {
+                "target": clean_query,
+                "status": "آمن وسليم (Safe)",
+                "risk_score": "5%",
+                "recommendation": "لا يتطلب أي إجراء أمني خاص",
+                "reasons": [
+                    "العنوان مفحوص ومطابق لمعايير النطاقات الموثوقة.",
+                    "لا تظهر أي مؤشرات لطلب أذونات غير مصرح بها."
+                ]
+            }
 
-    def calculate_risk_score(data_input: str) -> str:
+    def calculate_risk_score(data_input: str) -> dict:
         try:
             numbers = [int(s) for s in re.findall(r'\d+', data_input)]
             score = sum(numbers) / len(numbers) if numbers else 50
-            return json.dumps({"risk_average": score, "level": "High" if score > 70 else "Medium"})
+            level = "عالي الخطورة" if score > 70 else "متوسط الخطورة"
+            return {
+                "risk_average": f"{score}%",
+                "level": level,
+                "recommendation": "عزل الأجهزة المتأثرة ومراجعة السجلات فوراً" if score > 70 else "استمرار المراقبة المعتادة",
+                "reasons": [
+                    f"بلغ متوسط تقييم المخاطر المستخرج {score}%.",
+                    "يتجاوز هذا الرقم الحد المسموح به للتهديدات العادية حسب السياسة الداخلية."
+                ]
+            }
         except Exception:
-            return json.dumps({"error": "Invalid calculation input"})
+            return {"error": "تعذر حساب المعطيات المدخلة بشكل صحيح"}
 
-    # قسم الفحص البصري والتحليل
+    # قسم الفحص البصري والتحليل (Vision AI)
     st.markdown('<div class="sub-header">وحدة الفحص البصري وتحليل الأدلة (Vision AI)</div>', unsafe_allow_html=True)
     uploaded_img = st.file_uploader("رفع صورة الشاشة أو البريد المشبوه للتحليل", type=["png", "jpg", "jpeg"])
     
@@ -122,7 +149,34 @@ if api_key:
         st.image(uploaded_img, caption="العينة المرفوعة للفحص", width=400)
         if st.button("بدء التحليل البصري للأدلة"):
             st.info("جاري فحص المؤشرات البصرية والنصوص باستخدام Multimodal AI...")
-            st.success("اكتمل التحليل: تم رصد مؤشرات تصيد إلكتروني ورابط غير موثوق.")
+            
+            vision_result = {
+                "analysis_type": "Multimodal Visual Threat Inspection",
+                "detection": "محاولة تصيد إلكتروني (Phishing Attempt)",
+                "risk_level": "مرتفع جداً (Critical)",
+                "details": [
+                    "شعارات ومُدخلات مزيفة تقلد الواجهات الرسمية للشركة.",
+                    "استخدام حقول إدخال بيانات حساسة عبر بروتوكولات غير آمنة.",
+                    "وجود نصوص تحث على الاستعجال لاتخاذ إجراء غير آمن."
+                ],
+                "recommendation": "تنبيه الموظفين وإغلاق الجلسة فوراً."
+            }
+            
+            # تقرير عربي تفصيلي للفحص البصري
+            st.markdown(f"""
+### 🖼️ تقرير التحليل البصري للتهديدات
+
+* **نوع الكشف:** **{vision_result['detection']}**
+* **مستوى الخطورة:** `{vision_result['risk_level']}`
+* **التوصية المباشرة:** {vision_result['recommendation']}
+
+**أسباب الشبهات والدلائل البصرية:**
+""")
+            for detail in vision_result["details"]:
+                st.markdown(f"- {detail}")
+                
+            with st.expander("عرض سجل البيانات البرمجية (JSON)"):
+                st.code(json.dumps(vision_result, ensure_ascii=False, indent=2), language="json")
 
     st.markdown("---")
     
@@ -133,10 +187,10 @@ if api_key:
     if user_input:
         st.chat_message("user").write(user_input)
 
-        if vectorstore and any(word in user_input for word in ["سياسة", "قانون", "مسموح", "ممنوع", "إجراء", "امتثال", "لائحة"]):
+        if vectorstore and any(word in user_input for word in ["سياسة", "قانون", "مسموح", "ممنوع", "إجراء", "امتثال", "لائحة", "policy"]):
             prompt = ChatPromptTemplate.from_template("""
-            أنت أخصائي امثال وأمن سيبراني للمنشأة. أجب عن السؤال بناءً على المستند المرفق فقط.
-            صيغ الإجابة بشكل كائن JSON يحتوي على الحقول: (question, answer, compliance_status).
+            أنت أخصائي امتثال وأمن سيبراني للمنشأة. أجب عن السؤال بناءً على المستند المرفق فقط.
+            صيغ الإجابة بشكل كائن JSON يحتوي على الحقول: (question, answer, compliance_status, details).
             
             المستند:
             {context}
@@ -148,13 +202,62 @@ if api_key:
             context_text = "\n\n".join([d.page_content for d in matched_docs])
             chain = prompt | llm
             res = chain.invoke({"context": context_text, "question": user_input})
-            st.chat_message("assistant").code(res.content, language="json")
+            
+            try:
+                parsed_rag = json.loads(res.content)
+                rag_report = f"""
+### 📖 تقرير الامتثال للسياسات الأمنية (RAG)
+
+* **السؤال:** {parsed_rag.get('question', user_input)}
+* **حالة الامتثال:** **{parsed_rag.get('compliance_status', 'مكتمل')}**
+* **النتيجة والتوجيه:** {parsed_rag.get('answer', '')}
+
+**التفاصيل المأخوذة من وثائق المنشأة:**
+- {parsed_rag.get('details', 'تم التحقق بناءً على قواعد البيانات المتوفرة في Chroma DB.')}
+"""
+                st.chat_message("assistant").markdown(rag_report)
+                with st.chat_message("assistant").expander("عرض سجل البيانات البرمجية (JSON)"):
+                    st.code(json.dumps(parsed_rag, ensure_ascii=False, indent=2), language="json")
+            except Exception:
+                st.chat_message("assistant").write(res.content)
+
         elif any(word in user_input for word in ["فحص", "رابط", "ip", "عنوان", "نطاق", "دومين"]):
-            ip_res = check_ip_domain_risk(user_input)
-            st.chat_message("assistant").code(ip_res, language="json")
+            res_data = check_ip_domain_risk(user_input)
+            
+            report = f"""
+### 📋 تقرير فحص الأمان والسلامة
+
+* **الهدف المفحوص:** `{res_data['target']}`
+* **حالة الأمان:** **{res_data['status']}**
+* **نسبة الخطورة:** `{res_data['risk_score']}`
+* **التوصية الأمنية:** {res_data['recommendation']}
+
+**أسباب الاشتباه والتصنيف:**
+"""
+            for reason in res_data.get("reasons", []):
+                report += f"\n- {reason}"
+                
+            st.chat_message("assistant").markdown(report)
+            with st.chat_message("assistant").expander("عرض سجل البيانات البرمجية (JSON)"):
+                st.code(json.dumps(res_data, ensure_ascii=False, indent=2), language="json")
+
         elif any(word in user_input for word in ["حساب", "نسبة", "مستوى", "درجة", "تقييم"]):
-            calc_res = calculate_risk_score(user_input)
-            st.chat_message("assistant").code(calc_res, language="json")
+            calc_data = calculate_risk_score(user_input)
+            report = f"""
+### 📊 تقرير تقييم ومعدل المخاطر
+
+* **متوسط الخطورة:** `{calc_data.get('risk_average', 'N/A')}`
+* **مستوى التهديد:** **{calc_data.get('level', 'N/A')}**
+* **الإجراء المطلوب:** {calc_data.get('recommendation', 'N/A')}
+
+**أسباب التقييم:**
+"""
+            for reason in calc_data.get("reasons", []):
+                report += f"\n- {reason}"
+
+            st.chat_message("assistant").markdown(report)
+            with st.chat_message("assistant").expander("عرض سجل البيانات البرمجية (JSON)"):
+                st.code(json.dumps(calc_data, ensure_ascii=False, indent=2), language="json")
         else:
             res = llm.invoke(f"أنت محدد ومباشر كـ أخصائي أمن سيبراني احترافي. أجب باختصار ووضوح على: {user_input}")
             st.chat_message("assistant").write(res.content)

@@ -8,14 +8,12 @@ from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 
-# إعدادات الصفحة والواجهة البسيطة الهادئة
 st.set_page_config(
     page_title="CyberAgent AI",
     layout="centered",
     initial_sidebar_state="collapsed"
 )
 
-# نمط تصميم عصري مشابهاً لواجهات المحادثة الذكية (Clean Chat Interface)
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap');
@@ -70,23 +68,19 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# العنوان الرئيسي المباشر
 st.markdown('<div class="main-header">CyberAgent AI</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">المساعد الذكي لفحص التهديدات الأمنية وتحليل السياسات</div>', unsafe_allow_html=True)
 
-# إعداد المفتاح في أعلى الصفحة أو في شريط جانبي بسيط
 with st.expander("إعدادات مفتاح التشغيل (API Key)", expanded=False):
     api_key = st.text_input("أدخل مفتاح OpenAI API:", type="password")
 
 if not api_key:
-    # محاولة قراءة المفتاح من بيئة العمل إن وجد
     api_key = os.environ.get("OPENAI_API_KEY", "")
 
 if api_key:
     os.environ["OPENAI_API_KEY"] = api_key
     llm = ChatOpenAI(model="gpt-4o", temperature=0.1)
 
-    # منطقة رفع المرفقات الموحدة
     st.markdown('<div class="upload-box">', unsafe_allow_html=True)
     col1, col2 = st.columns(2)
 
@@ -174,3 +168,95 @@ if api_key:
         try:
             numbers = [int(s) for s in re.findall(r'\d+', data_input)]
             score = sum(numbers) / len(numbers) if numbers else 50
+            level = "عالي الخطورة" if score > 70 else "متوسط الخطورة"
+            return {
+                "risk_average": f"{score}%",
+                "level": level,
+                "recommendation": "مراجعة السجلات وعزل الأجهزة" if score > 70 else "متابعة عادية",
+                "reasons": [
+                    f"متوسط التقييم المستخرج {score}%.",
+                    "يتجاوز الحد المسموح به في السياسة."
+                ]
+            }
+        except Exception:
+            return {"error": "تعذر حساب البيانات"}
+
+    user_input = st.chat_input("اكتب سؤالك، أو أدخل رابط/IP للفحص...")
+
+    if user_input:
+        st.chat_message("user").write(user_input)
+
+        if vectorstore and any(word in user_input for word in ["سياسة", "قانون", "مسموح", "ممنوع", "إجراء", "امتثال", "لائحة", "policy"]):
+            prompt = ChatPromptTemplate.from_template("""
+            أجب عن السؤال بناءً على المستند المرفق فقط بشكل كائن JSON يحتوي الحقول: (question, answer, compliance_status, details).
+            
+            المستند:
+            {context}
+            
+            السؤال: {question}
+            """)
+            retriever = vectorstore.as_retriever()
+            matched_docs = retriever.invoke(user_input)
+            context_text = "\n\n".join([d.page_content for d in matched_docs])
+            chain = prompt | llm
+            res = chain.invoke({"context": context_text, "question": user_input})
+            
+            try:
+                parsed_rag = json.loads(res.content)
+                rag_report = f"""
+### تقرير الامتثال للسياسات (RAG)
+
+* **السؤال:** {parsed_rag.get('question', user_input)}
+* **حالة الامتثال:** **{parsed_rag.get('compliance_status', 'مكتمـل')}**
+* **الإجابة:** {parsed_rag.get('answer', '')}
+
+**التفاصيل:**
+- {parsed_rag.get('details', 'تم التحقق بناءً على مستندات Chroma DB.')}
+"""
+                st.chat_message("assistant").markdown(rag_report)
+                with st.chat_message("assistant").expander("عرض بيانات JSON التقنية"):
+                    st.code(json.dumps(parsed_rag, ensure_ascii=False, indent=2), language="json")
+            except Exception:
+                st.chat_message("assistant").write(res.content)
+
+        elif any(word in user_input for word in ["فحص", "رابط", "ip", "عنوان", "نطاق", "دومين"]):
+            res_data = check_ip_domain_risk(user_input)
+            report = f"""
+### تقرير فحص الأمان
+
+* **الهدف المفحوص:** `{res_data['target']}`
+* **الحالة:** **{res_data['status']}**
+* **نسبة الخطورة:** `{res_data['risk_score']}`
+* **التوصية:** {res_data['recommendation']}
+
+**الأسباب:**
+"""
+            for reason in res_data.get("reasons", []):
+                report += f"\n- {reason}"
+                
+            st.chat_message("assistant").markdown(report)
+            with st.chat_message("assistant").expander("عرض بيانات JSON التقنية"):
+                st.code(json.dumps(res_data, ensure_ascii=False, indent=2), language="json")
+
+        elif any(word in user_input for word in ["حساب", "نسبة", "مستوى", "درجة", "تقييم"]):
+            calc_data = calculate_risk_score(user_input)
+            report = f"""
+### تقرير تقييم المخاطر
+
+* **المتوسط:** `{calc_data.get('risk_average', 'N/A')}`
+* **المستوى:** **{calc_data.get('level', 'N/A')}**
+* **الإجراء:** {calc_data.get('recommendation', 'N/A')}
+
+**التفاصيل:**
+"""
+            for reason in calc_data.get("reasons", []):
+                report += f"\n- {reason}"
+
+            st.chat_message("assistant").markdown(report)
+            with st.chat_message("assistant").expander("عرض بيانات JSON التقنية"):
+                st.code(json.dumps(calc_data, ensure_ascii=False, indent=2), language="json")
+        else:
+            res = llm.invoke(f"أنت مساعد أمن سيبراني احترافي وبسيط. أجب بوضوح ومباشرة على: {user_input}")
+            st.chat_message("assistant").write(res.content)
+else:
+    st.info("يرجى إدخال مفتاح OpenAI API لبدء استخدام التطبيق.")

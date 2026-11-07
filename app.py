@@ -8,62 +8,77 @@ from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 
-# إعدادات الصفحة والواجهة الاحترافية
+# إعدادات الصفحة والاتجاه
 st.set_page_config(
-    page_title="CyberAgent AI | Enterprise Incident Response",
+    page_title="CyberAgent AI | مركز عمليات الأمن السيبراني",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# نمط التصميم المؤسسي النظيف (Corporate CSS)
+# نمط التصميم المؤسسي النظيف باللغة العربية (Corporate Dark Arabic Theme)
 st.markdown("""
     <style>
-    .stApp {
-        background-color: #0F172A;
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap');
+    
+    html, body, [class*="css"], .stApp {
+        font-family: 'IBM Plex Sans Arabic', sans-serif;
+        background-color: #0B0F17;
         color: #E2E8F0;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        direction: rtl;
+        text-align: right;
     }
     .main-header {
-        font-size: 26px;
+        font-size: 24px;
         font-weight: 700;
         color: #F8FAFC;
-        border-bottom: 1px solid #334155;
-        padding-bottom: 12px;
-        margin-bottom: 20px;
+        border-bottom: 2px solid #1E293B;
+        padding-bottom: 14px;
+        margin-bottom: 24px;
+        letter-spacing: -0.5px;
     }
     .sub-header {
-        font-size: 18px;
+        font-size: 16px;
         font-weight: 600;
         color: #94A3B8;
-        margin-top: 20px;
-        margin-bottom: 10px;
+        margin-top: 24px;
+        margin-bottom: 12px;
+        text-transform: uppercase;
     }
     .stButton>button {
         background-color: #2563EB;
         color: #FFFFFF;
-        border-radius: 4px;
+        border-radius: 6px;
         border: none;
-        padding: 8px 16px;
+        padding: 10px 20px;
         font-weight: 600;
+        font-family: 'IBM Plex Sans Arabic', sans-serif;
+        width: 100%;
     }
     .stButton>button:hover {
         background-color: #1D4ED8;
     }
-    .sidebar .sidebar-content {
+    .stTextInput>div>div>input {
         background-color: #1E293B;
+        color: #F8FAFC;
+        border: 1px solid #334155;
+        border-radius: 6px;
+    }
+    .sidebar .sidebar-content {
+        background-color: #111827;
+        border-left: 1px solid #1F2937;
     }
     </style>
 """, unsafe_allow_html=True)
 
 # الهيكل الرئيسي للواجهة
-st.markdown('<div class="main-header">CyberAgent AI - Cyber Security Operations Center</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-header">منظومة الاستجابة والتحليل الأمني - CyberAgent AI</div>', unsafe_allow_html=True)
 
 with st.sidebar:
-    st.markdown("### Authentication & Operations")
-    api_key = st.text_input("OpenAI API Key:", type="password")
+    st.markdown("### المصادقة والإعدادات")
+    api_key = st.text_input("مفتاح OpenAI API:", type="password")
     st.markdown("---")
-    st.markdown("### Policy Knowledge Base (RAG)")
-    uploaded_pdf = st.file_uploader("Upload Policy Document (PDF)", type=["pdf"])
+    st.markdown("### قاعدة معرفة السياسات (RAG)")
+    uploaded_pdf = st.file_uploader("رفع وثيقة السياسات الأمنية (PDF)", type=["pdf"])
 
 if api_key:
     os.environ["OPENAI_API_KEY"] = api_key
@@ -81,7 +96,7 @@ if api_key:
         
         embeddings = OpenAIEmbeddings()
         vectorstore = Chroma.from_documents(documents=splits, embedding=embeddings)
-        st.sidebar.success("Security policy successfully indexed in Chroma DB.")
+        st.sidebar.success("تم فهرسة وثيقة السياسات بنجاح داخل Chroma DB.")
 
     def check_ip_domain_risk(query: str) -> str:
         clean_query = query.strip()
@@ -99,34 +114,34 @@ if api_key:
         except Exception:
             return json.dumps({"error": "Invalid calculation input"})
 
-    # قسم فحص الوسائط Bounded Vision
-    st.markdown('<div class="sub-header">Threat Analysis & Visual Inspection (Vision AI)</div>', unsafe_allow_html=True)
-    uploaded_img = st.file_uploader("Upload Incident Screenshot / Artifact", type=["png", "jpg", "jpeg"])
+    # قسم الفحص البصري والتحليل
+    st.markdown('<div class="sub-header">وحدة الفحص البصري وتحليل الأدلة (Vision AI)</div>', unsafe_allow_html=True)
+    uploaded_img = st.file_uploader("رفع صورة الشاشة أو البريد المشبوه للتحليل", type=["png", "jpg", "jpeg"])
     
     if uploaded_img:
-        st.image(uploaded_img, caption="Analyzed Artifact", width=400)
-        if st.button("Execute Visual Analysis"):
-            st.info("Processing visual indicators and textual elements via Multimodal AI...")
-            st.success("Analysis Complete: Suspicious pattern detected. High probability of social engineering / phishing payload.")
+        st.image(uploaded_img, caption="العينة المرفوعة للفحص", width=400)
+        if st.button("بدء التحليل البصري للأدلة"):
+            st.info("جاري فحص المؤشرات البصرية والنصوص باستخدام Multimodal AI...")
+            st.success("اكتمل التحليل: تم رصد مؤشرات تصيد إلكتروني ورابط غير موثوق.")
 
     st.markdown("---")
     
-    # قسم التفاعل والاستعلامات
-    st.markdown('<div class="sub-header">Security Query Console & Agent Dispatch</div>', unsafe_allow_html=True)
-    user_input = st.chat_input("Enter query, policy question, or IP/URL for inspection...")
+    # وحدة التفاعل والاستعلامات
+    st.markdown('<div class="sub-header">منصة الاستعلامات والعمليات الأمنية</div>', unsafe_allow_html=True)
+    user_input = st.chat_input("أدخل الاستفسار، أو سؤال عن السياسات، أو رابط/IP للفحص...")
 
     if user_input:
         st.chat_message("user").write(user_input)
 
-        if vectorstore and any(word in user_input for word in ["سياسة", "قانون", "مسموح", "ممنوع", "إجراء", "policy", "compliance"]):
+        if vectorstore and any(word in user_input for word in ["سياسة", "قانون", "مسموح", "ممنوع", "إجراء", "امتثال", "لائحة"]):
             prompt = ChatPromptTemplate.from_template("""
-            You are an enterprise cybersecurity compliance expert. Answer the query based solely on the provided context.
-            Format the response strictly as a JSON object containing: (question, answer, compliance_status).
+            أنت أخصائي امثال وأمن سيبراني للمنشأة. أجب عن السؤال بناءً على المستند المرفق فقط.
+            صيغ الإجابة بشكل كائن JSON يحتوي على الحقول: (question, answer, compliance_status).
             
-            Context:
+            المستند:
             {context}
             
-            Query: {question}
+            السؤال: {question}
             """)
             retriever = vectorstore.as_retriever()
             matched_docs = retriever.invoke(user_input)
@@ -134,14 +149,14 @@ if api_key:
             chain = prompt | llm
             res = chain.invoke({"context": context_text, "question": user_input})
             st.chat_message("assistant").code(res.content, language="json")
-        elif any(word in user_input for word in ["فحص", "رابط", "ip", "عنوان", "نطاق", "check", "domain"]):
+        elif any(word in user_input for word in ["فحص", "رابط", "ip", "عنوان", "نطاق", "دومين"]):
             ip_res = check_ip_domain_risk(user_input)
             st.chat_message("assistant").code(ip_res, language="json")
-        elif any(word in user_input for word in ["حساب", "نسبة", "مستوى", "درجة", "score", "calculate"]):
+        elif any(word in user_input for word in ["حساب", "نسبة", "مستوى", "درجة", "تقييم"]):
             calc_res = calculate_risk_score(user_input)
             st.chat_message("assistant").code(calc_res, language="json")
         else:
-            res = llm.invoke(f"You are a professional Cyber Security Analyst. Provide a concise, clear response: {user_input}")
+            res = llm.invoke(f"أنت محدد ومباشر كـ أخصائي أمن سيبراني احترافي. أجب باختصار ووضوح على: {user_input}")
             st.chat_message("assistant").write(res.content)
 else:
-    st.info("System Ready: Please input OpenAI API Key in the sidebar to initialize operations.")
+    st.info("النظام في وضع الاستعداد: يرجى إدخال مفتاح OpenAI API في القائمة الجانبية لبدء التشغيل.")

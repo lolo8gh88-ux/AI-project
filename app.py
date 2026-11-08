@@ -126,7 +126,11 @@ if not api_key:
 
 if api_key:
     os.environ["OPENAI_API_KEY"] = api_key
-    llm = ChatOpenAI(model="gpt-4o", temperature=0.1)
+    
+    try:
+        llm = ChatOpenAI(model="gpt-4o", temperature=0.1)
+    except Exception as e:
+        st.error("تعذر الاتصال بـ OpenAI. يرجى التثبت من صحة المفتاح ورصيد الحساب.")
 
     st.markdown('<div class="upload-box">', unsafe_allow_html=True)
     col1, col2 = st.columns(2)
@@ -140,19 +144,24 @@ if api_key:
         uploaded_img = st.file_uploader("اختر صورة للتحليل البصري", type=["png", "jpg", "jpeg"], key="img_uploader", label_visibility="collapsed")
     st.markdown('</div>', unsafe_allow_html=True)
 
-    vectorstore = None
+    if "vectorstore" not in st.session_state:
+        st.session_state.vectorstore = None
+
     if uploaded_pdf:
-        with open("cyber_policy.pdf", "wb") as f:
-            f.write(uploaded_pdf.getbuffer())
-        
-        loader = PyPDFLoader("cyber_policy.pdf")
-        docs = loader.load()
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=150)
-        splits = text_splitter.split_documents(docs)
-        
-        embeddings = OpenAIEmbeddings()
-        vectorstore = Chroma.from_documents(documents=splits, embedding=embeddings)
-        st.success("تم تشفير وتخزين المستند في Chroma DB بنجاح.")
+        try:
+            with open("cyber_policy.pdf", "wb") as f:
+                f.write(uploaded_pdf.getbuffer())
+            
+            loader = PyPDFLoader("cyber_policy.pdf")
+            docs = loader.load()
+            text_splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=150)
+            splits = text_splitter.split_documents(docs)
+            
+            embeddings = OpenAIEmbeddings()
+            st.session_state.vectorstore = Chroma.from_documents(documents=splits, embedding=embeddings)
+            st.success("تم تشفير وتخزين المستند في Chroma DB بنجاح.")
+        except Exception as err:
+            st.error("حدث خطأ أثناء تشفير الملف. تأكدي من أن مفتاح OpenAI API صالح ويحتوي على رصيد فعال.")
 
     if uploaded_img:
         st.image(uploaded_img, caption="الصورة المرفوعة للفحص", width=350)
@@ -239,23 +248,23 @@ if api_key:
     if user_input:
         st.chat_message("user").write(user_input)
 
-        if vectorstore and any(word in user_input for word in ["سياسة", "قانون", "مسموح", "ممنوع", "إجراء", "امتثال", "لائحة", "policy"]):
-            prompt = ChatPromptTemplate.from_template("""
-            Answer the query based ONLY on context. Output strictly a JSON object with English keys and values:
-            (question, compliance_status, answer_summary, source_document).
-            
-            Context:
-            {context}
-            
-            Query: {question}
-            """)
-            retriever = vectorstore.as_retriever()
-            matched_docs = retriever.invoke(user_input)
-            context_text = "\n\n".join([d.page_content for d in matched_docs])
-            chain = prompt | llm
-            res = chain.invoke({"context": context_text, "question": user_input})
-            
+        if st.session_state.vectorstore and any(word in user_input for word in ["سياسة", "قانون", "مسموح", "ممنوع", "إجراء", "امتثال", "لائحة", "policy"]):
             try:
+                prompt = ChatPromptTemplate.from_template("""
+                Answer the query based ONLY on context. Output strictly a JSON object with English keys and values:
+                (question, compliance_status, answer_summary, source_document).
+                
+                Context:
+                {context}
+                
+                Query: {question}
+                """)
+                retriever = st.session_state.vectorstore.as_retriever()
+                matched_docs = retriever.invoke(user_input)
+                context_text = "\n\n".join([d.page_content for d in matched_docs])
+                chain = prompt | llm
+                res = chain.invoke({"context": context_text, "question": user_input})
+                
                 parsed_rag = json.loads(res.content)
                 status_badge = '<span class="badge-success">مكتمل وممتثل</span>' if parsed_rag.get('compliance_status') == "COMPLIANT" else '<span class="badge-danger">غير ممتثل</span>'
                 
@@ -276,6 +285,7 @@ if api_key:
                 with st.chat_message("assistant").expander("عرض بيانات JSON التقنية"):
                     st.code(json.dumps(parsed_rag, indent=2), language="json")
             except Exception:
+                res = llm.invoke(f"أنت مساعد أمن سيبراني احترافي وبسيط. أجب بوضوح ومباشرة على: {user_input}")
                 st.chat_message("assistant").write(res.content)
 
         elif any(word in user_input for word in ["فحص", "رابط", "ip", "عنوان", "نطاق", "دومين"]):

@@ -133,9 +133,9 @@ css_code = """
 st.markdown(css_code, unsafe_allow_html=True)
 
 st.markdown('<div class="header-title">CyberAgent AI</div>', unsafe_allow_html=True)
-st.markdown('<div class="header-subtitle">المنصة الذكية لفحص التهديدات الأمنية والاستجابة الفورية للحوادث</div>', unsafe_allow_html=True)
+st.markdown('<div class="header-subtitle">المنصة الذكية لفحص التهديدات والاستجابة الفورية للحوادث</div>', unsafe_allow_html=True)
 
-with st.expander("إعدادات مفتاح التشغيل (API Key)", expanded=False):
+with st.expander("إعدادات مفتاح التشغيل API Key", expanded=False):
     api_key = st.text_input("مفتاح OpenAI API:", type="password")
 
 if not api_key:
@@ -147,24 +147,24 @@ if api_key:
     try:
         llm = ChatOpenAI(model="gpt-4o", temperature=0.1)
     except Exception:
-        st.error("يرجى التأكد من إدخال مفتاح API صحيح.")
+        st.error("يرجى التأكد من إدخال مفتاح API صحيح")
 
     col1, col2 = st.columns(2)
 
     with col1:
         st.markdown("""
         <div class="card-style">
-            <div class="card-header">01 / الاستجابة للحوادث</div>
-            <div class="card-desc">توليد بروتوكولات احتواء وتوصيات فورية.</div>
+            <div class="card-header">01 / الاستجابة للحوادث السيبرانية</div>
+            <div class="card-desc">توليد بروتوكولات احتواء وتوصيات فورية لحماية المنشأة</div>
         """, unsafe_allow_html=True)
         incident_type = st.selectbox(
             "نوع الحادث الأمني:",
             [
-                "اختر نوع الهجمة...",
-                "برمجية فدية (Ransomware)",
-                "اختراق بريد إلكتروني (Email Breach)",
-                "تسريب بيانات حساسة (Data Leak)",
-                "هجمة حجب الخدمة (DDoS Attack)"
+                "اختر نوع الهجمة",
+                "برمجية فدية - Ransomware",
+                "اختراق بريد - Email Breach",
+                "تسريب بيانات - Data Leak",
+                "حجب الخدمة - DDoS Attack"
             ],
             label_visibility="collapsed"
         )
@@ -174,86 +174,85 @@ if api_key:
     with col2:
         st.markdown("""
         <div class="card-style">
-            <div class="card-header">02 / تحليل الصور والأدلة (Vision AI)</div>
-            <div class="card-desc">فحص بصرية محاولات التصيد والرسائل المشبوهة.</div>
+            <div class="card-header">02 / فحص الأدلة والرسائل المشبوهة</div>
+            <div class="card-desc">تحليل بصرية صور الرسائل ومحاولات التصيد الإلكتروني</div>
         """, unsafe_allow_html=True)
         uploaded_img = st.file_uploader("اختر صورة للتحليل", type=["png", "jpg", "jpeg"], key="img_uploader", label_visibility="collapsed")
         analyze_img_btn = st.button("بدء تحليل الصورة") if uploaded_img else None
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # قواعد خطط الاستجابة المتخصصة لكل حادثة على حدة
+    # قاعدة الخطط المرتّبة وبدون نقاط في نهايات الجمل
     incident_database = {
-        "برمجية فدية (Ransomware)": {
+        "برمجية فدية - Ransomware": {
             "severity": "CRITICAL",
             "protocol_ar": "عزل الشبكة الفوري والتحقق من سلامة النسخ الاحتياطية",
             "protocol_en": "ISOLATE_NETWORK_AND_VERIFY_OFFLINE_BACKUPS",
             "actions_ar": [
-                "فصل جميع الخوادم والأجهزة المتأثرة عن الشبكة المحلية والإنترنت فوراً لمنع التشفير العابر.",
-                "عدم التواصل أو دفع أي مبالغ مالية للجهات المهاجمة نهائياً.",
-                "التحقق من سلامة النسخ الاحتياطية المقطوعة عن الشبكة (Offline Backups).",
-                "مسح الأنظمة المتأثرة وإعادة تثبيتها من صور معتمدة وآمنة."
+                "فصل جميع الخوادم والأجهزة المتأثرة عن الشبكة المحلية والإنترنت فوراً لمنع انتشار التشفير",
+                "عدم التواصل أو دفع أي مبالغ مالية للجهات المهاجمة",
+                "التحقق من سلامة النسخ الاحتياطية المقطوعة عن الشبكة",
+                "مسح الأنظمة المتأثرة وإعادة تثبيتها من صور معتمدة وآمنة"
             ],
             "actions_en": [
-                "Isolate affected servers and endpoints from local LAN immediately.",
-                "Do not pay ransom or communicate with threat actors.",
-                "Verify integrity of offline uncorrupted backups.",
-                "Re-image impacted endpoints using secured baseline images."
+                "Isolate affected servers and endpoints from local network immediately",
+                "Do not pay ransom or communicate with threat actors",
+                "Verify integrity of offline uncorrupted backups",
+                "Re-image impacted endpoints using secured baseline images"
             ]
         },
-        "اختراق بريد إلكتروني (Email Breach)": {
+        "اختراق بريد - Email Breach": {
             "severity": "HIGH",
-            "protocol_ar": "إلغاء الجلسات النشطة وإعادة تعيين المفاتيح وتدقيق قواعد إعادة التوجيه",
+            "protocol_ar": "إلغاء الجلسات النشطة وإعادة تعيين المفاتيح وتدقيق التوجيه",
             "protocol_en": "REVOKE_ACTIVE_SESSIONS_AND_AUDIT_MAIL_RULES",
             "actions_ar": [
-                "إنهاء كافة الجلسات النشطة (Revoke Sessions) للحساب المخترق من لوحة الإدارة.",
-                "تغيير كلمة المرور وتفعيل التحقق الثنائي (MFA) عبر تطبيق مصادقة.",
-                "مراجعة وفحص قواعد البريد (Inbox Rules) للتأكد من عدم وجود إعادة توجيه تلقائي للرسائل.",
-                "فحص سجلات الدخول (Audit Logs) للتحقق من العناوين والأنشطة المشبوهة."
+                "إنهاء كافة الجلسات النشطة للحساب المخترق من لوحة الإدارة",
+                "تغيير كلمة المرور وتفعيل التحقق الثنائي عبر تطبيق مصادقة",
+                "مراجعة وفحص قواعد البريد للتأكد من عدم وجود إعادة توجيه تلقائي",
+                "فحص سجلات الدخول للتحقق من العناوين والأنشطة المشبوهة"
             ],
             "actions_en": [
-                "Revoke all active user sessions across all devices via Admin Console.",
-                "Enforce immediate password reset and mandate hardware/app MFA.",
-                "Audit inbox forwarding rules and delegation settings for unauthorized additions.",
-                "Analyze sign-in logs to extract attacker IPs and compromised scopes."
+                "Revoke all active user sessions across all devices via Admin Console",
+                "Enforce immediate password reset and mandate MFA authentication",
+                "Audit inbox forwarding rules and delegation settings for unauthorized additions",
+                "Analyze sign-in logs to extract attacker IPs and compromised scopes"
             ]
         },
-        "تسريب بيانات حساسة (Data Leak)": {
+        "تسريب بيانات - Data Leak": {
             "severity": "CRITICAL",
-            "protocol_ar": "إغلاق منافذ التسريب وحظر رموز الوصول وتطبيق بروتوكول DLP",
+            "protocol_ar": "إغلاق منافذ التسريب وحظر رموز الوصول وتطبيق بروتوكول التصنيف",
             "protocol_en": "CONTAIN_LEAKAGE_VECTORS_AND_REVOKE_API_KEYS",
             "actions_ar": [
-                "تحديد وحظر مصدر ومنافذ تسريب البيانات فوراً (API endpoints / Cloud Buckets).",
-                "تغيير كافة مفاتيح الوصول والرموز البرمجية (API Keys & Access Tokens) الـمـنـكشفة.",
-                "حصر نطاق البيانات المسربة وتصنيف حساسيتها (PII / Financial Data).",
-                "إبلاغ فريق الامتثال والشؤون القانونية للالتزام بمتطلبات الإفصاح التنظيمي."
+                "تحديد وحظر مصدر ومنافذ تسريب البيانات فوراً",
+                "تغيير كافة مفاتيح الوصول والرموز البرمجية المنكشفة",
+                "حصر نطاق البيانات المسربة وتصنيف حساسيتها",
+                "إبلاغ فريق الامتثال والشؤون القانونية للالتزام بمتطلبات الإفصاح"
             ],
             "actions_en": [
-                "Block leaky data vectors and restrict public access to cloud storage buckets.",
-                "Revoke and rotate exposed secrets, API keys, and database credentials.",
-                "Perform data classification assessment on compromised datasets.",
-                "Notify legal and compliance officers for regulatory notification protocols."
+                "Block leaky data vectors and restrict public access to storage containers",
+                "Revoke and rotate exposed secrets, API keys, and database credentials",
+                "Perform data classification assessment on compromised datasets",
+                "Notify legal and compliance officers for regulatory protocols"
             ]
         },
-        "هجمة حجب الخدمة (DDoS Attack)": {
+        "حجب الخدمة - DDoS Attack": {
             "severity": "HIGH",
-            "protocol_ar": "تحويل المسار عبر خدمات التخفيف وتفعيل جدار حماية التطبيقات (WAF)",
+            "protocol_ar": "تحويل المسار عبر خدمات التخفيف وتفعيل جدار الحماية",
             "protocol_en": "ACTIVATE_DDoS_MITIGATION_AND_ENABLE_WAF_RATE_LIMITING",
             "actions_ar": [
-                "تفعيل وضع الحماية القصوى وتحويل حركة المرور لشبكة التخفيف (Scrubbing Center).",
-                "تطبيق قواعد تحديد المعدل (Rate Limiting) على مستوى جدار حماية التطبيقات (WAF).",
-                "حظر مصادر الحركة المشبوهة وحزم البينات غير القياسية بناءً على أنماط الهجمة.",
-                "التواصل مع مزيد خدمة الإنترنت (ISP) لتصفية الحركة المرتفعة على مستوى النطاق."
+                "تفعيل وضع الحماية القصوى وتحويل حركة المرور لشبكة التخفيف",
+                "تطبيق قواعد تحديد المعدل على مستوى جدار حماية التطبيقات",
+                "حظر مصادر الحركة المشبوهة بناءً على أنماط الهجمة",
+                "التواصل مع مزود خدمة الإنترنت لتصفية الحركة المرتفعة"
             ],
             "actions_en": [
-                "Reroute incoming web traffic through cloud scrubbing proxy networks.",
-                "Enforce aggressive rate-limiting and Challenge-Response rules on WAF.",
-                "Drop malformed packets and block malicious IP subnets dynamically.",
-                "Coordinate upstream filtering with Tier-1 Internet Service Providers."
+                "Reroute incoming web traffic through cloud scrubbing networks",
+                "Enforce aggressive rate-limiting rules on Application Firewall",
+                "Drop malformed packets and block malicious IP subnets dynamically",
+                "Coordinate upstream filtering with Internet Service Providers"
             ]
         }
     }
 
-    # معالجة خطة الاستجابة
     if incident_type in incident_database and generate_plan_btn:
         plan_info = incident_database[incident_type]
         
@@ -262,7 +261,7 @@ if api_key:
             <div class="report-title">خطة الاستجابة الفورية: {incident_type}</div>
             <div style="margin-bottom: 8px;"><b>مستوى الخطورة:</b> <span class="badge-danger">{plan_info['severity']}</span></div>
             <div style="margin-bottom: 8px;"><b>بروتوكول الاحتواء:</b> {plan_info['protocol_ar']}</div>
-            <div style="margin-top: 12px; font-weight: 600;">خطوات التنفيذ المباشرة الخاصة بالتكتيك:</div>
+            <div style="margin-top: 12px; font-weight: 600;">خطوات التنفيذ المباشرة:</div>
             <div class="reasons-list">
                 <ul>
                     {"".join([f"<li>{action}</li>" for action in plan_info['actions_ar']])}
@@ -280,7 +279,6 @@ if api_key:
         with st.expander("عرض بيانات JSON التقنية"):
             st.code(json.dumps(tech_json, indent=2), language="json")
 
-    # معالجة تحليل الصور
     if uploaded_img:
         st.image(uploaded_img, caption="الصورة المرفوعة للفحص", width=300)
         if analyze_img_btn:
@@ -299,15 +297,15 @@ if api_key:
             st.markdown("""
             <div class="report-card">
                 <div class="report-title">تقرير التحليل البصري للأدلة</div>
-                <div style="margin-bottom: 8px;"><b>نتيجة الكشف:</b> محاولة تصيد إلكتروني (Phishing)</div>
-                <div style="margin-bottom: 8px;"><b>مستوى الخطورة:</b> <span class="badge-danger">عالي جداً (Critical)</span></div>
-                <div style="margin-bottom: 8px;"><b>التوصية:</b> إغلاق الصفحة فوراً وعدم إدخال أي بيانات.</div>
-                <div style="margin-top: 12px; font-weight: 600;">ملاحظات الفحص والبصريات:</div>
+                <div style="margin-bottom: 8px;"><b>نتيجة الكشف:</b> محاولة تصيد إلكتروني Phishing</div>
+                <div style="margin-bottom: 8px;"><b>مستوى الخطورة:</b> <span class="badge-danger">عالي جداً Critical</span></div>
+                <div style="margin-bottom: 8px;"><b>التوصية:</b> إغلاق الصفحة فوراً وعدم إدخال أي بيانات</div>
+                <div style="margin-top: 12px; font-weight: 600;">ملاحظات الفحص:</div>
                 <div class="reasons-list">
                     <ul>
-                        <li>شعارات ومكونات مزيفة تقلد الواجهات الرسمية.</li>
-                        <li>حقول إدخال بيانات غير محمية لجمع المعلومات.</li>
-                        <li>نصوص تحث على اتخاذ إجراء سريع ومشبوه.</li>
+                        <li>شعارات ومكونات مزيفة تقلد الواجهات الرسمية</li>
+                        <li>حقول إدخال بيانات غير محمية لجمع المعلومات</li>
+                        <li>نصوص تحث على اتخاذ إجراء سريع ومشبوه</li>
                     </ul>
                 </div>
             </div>
@@ -359,7 +357,7 @@ if api_key:
         except Exception:
             return {"error": "INVALID_INPUT"}
 
-    user_input = st.chat_input("اكتب سؤالك، أدخل رابطاً للفحص، أو اكتب أرقاماً لحساب درجة الخطورة...")
+    user_input = st.chat_input("اكتب سؤالك، أدخل رابطاً للفحص، أو اكتب أرقاماً لحساب درجة الخطورة")
 
     if user_input:
         st.chat_message("user").write(user_input)
@@ -368,7 +366,7 @@ if api_key:
             res_data = check_ip_domain_risk(user_input)
             is_suspicious = res_data['status'] == "SUSPICIOUS"
             
-            badge_html = '<span class="badge-danger">مشبوه (High Risk)</span>' if is_suspicious else '<span class="badge-success">آمن (Safe)</span>'
+            badge_html = '<span class="badge-danger">مشبوه High Risk</span>' if is_suspicious else '<span class="badge-success">آمن Safe</span>'
             rec_text = "حظر الرابط فوراً في الجدار الناري وعدم الفتح" if is_suspicious else "الرابط سليم ولا توجد خطورة"
             
             st.chat_message("assistant").markdown(f"""
@@ -381,8 +379,8 @@ if api_key:
                 <div style="margin-top: 12px; font-weight: 600;">أسباب التقييم والاشتباه:</div>
                 <div class="reasons-list">
                     <ul>
-                        <li>التحقق من وجود شهادات التشفير وحالة الاتصال.</li>
-                        <li>مطابقة العنوان مع النطاقات القائمة في القوائم السوداء.</li>
+                        <li>التحقق من وجود شهادات التشفير وحالة الاتصال</li>
+                        <li>مطابقة العنوان مع النطاقات القائمة في القوائم السوداء</li>
                     </ul>
                 </div>
             </div>
@@ -395,7 +393,7 @@ if api_key:
             calc_data = calculate_risk_score(user_input)
             is_high = calc_data.get('risk_level') == "HIGH"
             
-            badge_html = '<span class="badge-danger">عالي الخطورة</span>' if is_high else '<span class="badge-success">متوسط / منخفض</span>'
+            badge_html = '<span class="badge-danger">عالي الخطورة</span>' if is_high else '<span class="badge-success">متوسط أو منخفض</span>'
             action_text = "عزل الأجهزة المتأثرة ومراجعة السجلات فوراً" if is_high else "استمرار المراقبة المعتادة"
             
             st.chat_message("assistant").markdown(f"""
@@ -407,8 +405,8 @@ if api_key:
                 <div style="margin-top: 12px; font-weight: 600;">ملاحظات الحساب:</div>
                 <div class="reasons-list">
                     <ul>
-                        <li>تم استخراج الأرقام من المدخلات وحساب المتوسط الحسابي.</li>
-                        <li>تمت مقارنة النتيجة مع الحد المسموح به في سياسة المنشأة.</li>
+                        <li>تم استخراج الأرقام من المدخلات وحساب المتوسط الحسابي</li>
+                        <li>تمت مقارنة النتيجة مع الحد المسموح به في سياسة المنشأة</li>
                     </ul>
                 </div>
             </div>
@@ -417,7 +415,7 @@ if api_key:
             with st.chat_message("assistant").expander("عرض بيانات JSON التقنية"):
                 st.code(json.dumps(calc_data, indent=2), language="json")
         else:
-            res = llm.invoke(f"أنت مساعد أمن سيبراني احترافي وبسيط. أجب بوضوح ومباشرة على: {user_input}")
+            res = llm.invoke(f"أنت مساعد أمن سيبراني احترافي وبسيط. أجب بوضوح ومباشرة وبدون وضع نقطة في نهاية إجابتك على: {user_input}")
             st.chat_message("assistant").write(res.content)
 else:
-    st.info("يرجى إدخال مفتاح OpenAI API لبدء استخدام التطبيق.")
+    st.info("يرجى إدخال مفتاح OpenAI API لبدء استخدام التطبيق")

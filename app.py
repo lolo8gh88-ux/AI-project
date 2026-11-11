@@ -10,7 +10,6 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# تصميم عصري ونظيف وموحد بدون شريط جانبي مدمج ومرتب جداً
 css_code = """
     <style>
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap');
@@ -118,7 +117,6 @@ css_code = """
         background-color: #1D4ED8;
     }
     
-    /* جعل صندوق الشات ومربعات الإدخال باللون الفاتح الموحد */
     .stTextInput>div>div>input, .stSelectbox>div>div {
         background-color: #FFFFFF;
         color: #0F172A;
@@ -134,11 +132,9 @@ css_code = """
 """
 st.markdown(css_code, unsafe_allow_html=True)
 
-# العنوان الرئيسي المباشر والأنيق
 st.markdown('<div class="header-title">CyberAgent AI</div>', unsafe_allow_html=True)
 st.markdown('<div class="header-subtitle">المنصة الذكية لفحص التهديدات الأمنية والاستجابة الفورية للحوادث</div>', unsafe_allow_html=True)
 
-# مربع إعدادات المفتاح بال أعلى بشكل مرتّب وبدون تشتيت
 with st.expander("إعدادات مفتاح التشغيل (API Key)", expanded=False):
     api_key = st.text_input("مفتاح OpenAI API:", type="password")
 
@@ -153,7 +149,6 @@ if api_key:
     except Exception:
         st.error("يرجى التأكد من إدخال مفتاح API صحيح.")
 
-    # تقسيم الخدمات بطريقة متناسقة ونظيفة
     col1, col2 = st.columns(2)
 
     with col1:
@@ -186,38 +181,61 @@ if api_key:
         analyze_img_btn = st.button("بدء تحليل الصورة") if uploaded_img else None
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # معالجة خطة الاستجابة
+    # معالجة ديناميكية حقيقية للخطة عبر الذكاء الاصطناعي
     if incident_type != "اختر نوع الهجمة..." and generate_plan_btn:
-        inc_json = {
-            "incident_type": incident_type,
-            "severity_assessment": "CRITICAL",
-            "containment_protocol": "ISOLATE_NETWORK_AND_REVOKE_CREDENTIALS",
-            "recommended_actions": [
-                "Disconnect affected hosts from local LAN immediately",
-                "Reset active directory tokens and primary user secrets",
-                "Engage Incident Response Team for digital forensics"
-            ]
-        }
-        
-        st.markdown(f"""
-        <div class="report-card">
-            <div class="report-title">خطة الاستجابة الفورية: {incident_type}</div>
-            <div style="margin-bottom: 8px;"><b>مستوى الخطورة:</b> <span class="badge-danger">حرج جداً (Critical)</span></div>
-            <div style="margin-bottom: 8px;"><b>بروتوكول الاحتواء:</b> عزل الأجهزة المتأثرة وإلغاء الصلاحيات فوراً.</div>
-            <div style="margin-top: 12px; font-weight: 600;">خطوات التنفيذ المباشرة:</div>
-            <div class="reasons-list">
-                <ul>
-                    <li>فصل الأنظمة والأجهزة المتأثرة عن الشبكة المحلية والإنترنت لتجنب الانتشار.</li>
-                    <li>إعادة تعيين كلمات المرور والرموز النشطة للحسابات المخترقة.</li>
-                    <li>بدء استرجاع النسخ الاحتياطية (Backups) بعد التأكد من سلامتها.</li>
-                    <li>توثيق زمان ومكان الاكتشاف لتقديم التقرير لفريق الأدلة الجنائية الرقمية.</li>
-                </ul>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        with st.expander("عرض بيانات JSON التقنية"):
-            st.code(json.dumps(inc_json, indent=2), language="json")
+        with st.spinner("جاري تحليل نوع الحادثة وتوليد الخطة المخصصة..."):
+            prompt_inc = f"""
+            You are a senior Incident Response Expert. Generate a specific Incident Response plan for the threat: '{incident_type}'.
+            Output strictly a valid JSON object with NO markdown formatting, NO backticks.
+            JSON structure must be exactly:
+            {{
+                "incident_type": "{incident_type}",
+                "severity_assessment": "HIGH or CRITICAL",
+                "containment_protocol": "Short English technical summary of containment",
+                "arabic_title": "عنوان الخطة بالعربي",
+                "arabic_protocol": "بروتوكول الاحتواء بالعربي",
+                "recommended_actions_ar": [
+                    "خطوة 1 بالتفصيل المباشر للهجمة",
+                    "خطوة 2 بالتفصيل المباشر للهجمة",
+                    "خطوة 3 بالتفصيل المباشر للهجمة",
+                    "خطوة 4 بالتفصيل المباشر للهجمة"
+                ],
+                "recommended_actions_en": [
+                    "Step 1 in English",
+                    "Step 2 in English",
+                    "Step 3 in English"
+                ]
+            }}
+            """
+            try:
+                res_inc = llm.invoke(prompt_inc)
+                clean_json_str = res_inc.content.strip().replace("```json", "").replace("```", "")
+                inc_data = json.loads(clean_json_str)
+                
+                st.markdown(f"""
+                <div class="report-card">
+                    <div class="report-title">خطة الاستجابة الفورية: {inc_data.get('arabic_title', incident_type)}</div>
+                    <div style="margin-bottom: 8px;"><b>مستوى الخطورة:</b> <span class="badge-danger">{inc_data.get('severity_assessment', 'CRITICAL')}</span></div>
+                    <div style="margin-bottom: 8px;"><b>بروتوكول الاحتواء:</b> {inc_data.get('arabic_protocol', '')}</div>
+                    <div style="margin-top: 12px; font-weight: 600;">خطوات التنفيذ المباشرة الخاصة بالتكتيك:</div>
+                    <div class="reasons-list">
+                        <ul>
+                            {"".join([f"<li>{action}</li>" for action in inc_data.get('recommended_actions_ar', [])])}
+                        </ul>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                tech_json = {
+                    "incident_type": inc_data.get("incident_type"),
+                    "severity_assessment": inc_data.get("severity_assessment"),
+                    "containment_protocol": inc_data.get("containment_protocol"),
+                    "recommended_actions": inc_data.get("recommended_actions_en")
+                }
+                with st.expander("عرض بيانات JSON التقنية"):
+                    st.code(json.dumps(tech_json, indent=2), language="json")
+            except Exception as e:
+                st.error("حدث خطأ أثناء الاتصال بالنموذج. يرجى إعادة المحاولة.")
 
     # معالجة تحليل الصور
     if uploaded_img:

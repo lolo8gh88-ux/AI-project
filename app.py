@@ -12,7 +12,7 @@ st.set_page_config(
 
 css_code = """
     <style>
-    @import url('[https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap](https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap)');
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap');
     
     html, body, [class*="css"], .stApp {
         font-family: 'IBM Plex Sans Arabic', sans-serif;
@@ -146,7 +146,6 @@ if api_key:
     
     try:
         llm = ChatOpenAI(model="gpt-4o", temperature=0.1)
-        llm_json = ChatOpenAI(model="gpt-4o", temperature=0.1, model_kwargs={"response_format": {"type": "json_object"}})
     except Exception:
         st.error("يرجى التأكد من إدخال مفتاح API صحيح.")
 
@@ -182,59 +181,104 @@ if api_key:
         analyze_img_btn = st.button("بدء تحليل الصورة") if uploaded_img else None
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # معالجة آمنة وديناميكية لتوليد الخطط
-    if incident_type != "اختر نوع الهجمة..." and generate_plan_btn:
-        with st.spinner("جاري تحليل نوع الحادثة وتوليد الخطة المخصصة..."):
-            prompt_inc = f"""
-            Generate a JSON object for Incident Response plan regarding threat type: '{incident_type}'.
-            Required JSON structure:
-            {{
-                "incident_type": "{incident_type}",
-                "severity_assessment": "CRITICAL",
-                "containment_protocol": "Short English containment text",
-                "arabic_title": "عنوان الخطة بالعربي",
-                "arabic_protocol": "بروتوكول الاحتواء بالعربي",
-                "recommended_actions_ar": [
-                    "إجراء 1 بالعربي خاص بالتهديد",
-                    "إجراء 2 بالعربي خاص بالتهديد",
-                    "إجراء 3 بالعربي خاص بالتهديد",
-                    "إجراء 4 بالعربي خاص بالتهديد"
-                ],
-                "recommended_actions_en": [
-                    "Step 1 in English",
-                    "Step 2 in English",
-                    "Step 3 in English"
-                ]
-            }}
-            """
-            try:
-                res_inc = llm_json.invoke(prompt_inc)
-                inc_data = json.loads(res_inc.content)
-                
-                st.markdown(f"""
-                <div class="report-card">
-                    <div class="report-title">خطة الاستجابة الفورية: {inc_data.get('arabic_title', incident_type)}</div>
-                    <div style="margin-bottom: 8px;"><b>مستوى الخطورة:</b> <span class="badge-danger">{inc_data.get('severity_assessment', 'CRITICAL')}</span></div>
-                    <div style="margin-bottom: 8px;"><b>بروتوكول الاحتواء:</b> {inc_data.get('arabic_protocol', '')}</div>
-                    <div style="margin-top: 12px; font-weight: 600;">خطوات التنفيذ المباشرة الخاصة بالتكتيك:</div>
-                    <div class="reasons-list">
-                        <ul>
-                            {"".join([f"<li>{action}</li>" for action in inc_data.get('recommended_actions_ar', [])])}
-                        </ul>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                tech_json = {
-                    "incident_type": inc_data.get("incident_type"),
-                    "severity_assessment": inc_data.get("severity_assessment"),
-                    "containment_protocol": inc_data.get("containment_protocol"),
-                    "recommended_actions": inc_data.get("recommended_actions_en")
-                }
-                with st.expander("عرض بيانات JSON التقنية"):
-                    st.code(json.dumps(tech_json, indent=2), language="json")
-            except Exception as e:
-                st.error("تعذر جلب الخطة الديناميكية. تأكدي من صحة مفتاح OpenAI API المكتوب.")
+    # قواعد خطط الاستجابة المتخصصة لكل حادثة على حدة
+    incident_database = {
+        "برمجية فدية (Ransomware)": {
+            "severity": "CRITICAL",
+            "protocol_ar": "عزل الشبكة الفوري والتحقق من سلامة النسخ الاحتياطية",
+            "protocol_en": "ISOLATE_NETWORK_AND_VERIFY_OFFLINE_BACKUPS",
+            "actions_ar": [
+                "فصل جميع الخوادم والأجهزة المتأثرة عن الشبكة المحلية والإنترنت فوراً لمنع التشفير العابر.",
+                "عدم التواصل أو دفع أي مبالغ مالية للجهات المهاجمة نهائياً.",
+                "التحقق من سلامة النسخ الاحتياطية المقطوعة عن الشبكة (Offline Backups).",
+                "مسح الأنظمة المتأثرة وإعادة تثبيتها من صور معتمدة وآمنة."
+            ],
+            "actions_en": [
+                "Isolate affected servers and endpoints from local LAN immediately.",
+                "Do not pay ransom or communicate with threat actors.",
+                "Verify integrity of offline uncorrupted backups.",
+                "Re-image impacted endpoints using secured baseline images."
+            ]
+        },
+        "اختراق بريد إلكتروني (Email Breach)": {
+            "severity": "HIGH",
+            "protocol_ar": "إلغاء الجلسات النشطة وإعادة تعيين المفاتيح وتدقيق قواعد إعادة التوجيه",
+            "protocol_en": "REVOKE_ACTIVE_SESSIONS_AND_AUDIT_MAIL_RULES",
+            "actions_ar": [
+                "إنهاء كافة الجلسات النشطة (Revoke Sessions) للحساب المخترق من لوحة الإدارة.",
+                "تغيير كلمة المرور وتفعيل التحقق الثنائي (MFA) عبر تطبيق مصادقة.",
+                "مراجعة وفحص قواعد البريد (Inbox Rules) للتأكد من عدم وجود إعادة توجيه تلقائي للرسائل.",
+                "فحص سجلات الدخول (Audit Logs) للتحقق من العناوين والأنشطة المشبوهة."
+            ],
+            "actions_en": [
+                "Revoke all active user sessions across all devices via Admin Console.",
+                "Enforce immediate password reset and mandate hardware/app MFA.",
+                "Audit inbox forwarding rules and delegation settings for unauthorized additions.",
+                "Analyze sign-in logs to extract attacker IPs and compromised scopes."
+            ]
+        },
+        "تسريب بيانات حساسة (Data Leak)": {
+            "severity": "CRITICAL",
+            "protocol_ar": "إغلاق منافذ التسريب وحظر رموز الوصول وتطبيق بروتوكول DLP",
+            "protocol_en": "CONTAIN_LEAKAGE_VECTORS_AND_REVOKE_API_KEYS",
+            "actions_ar": [
+                "تحديد وحظر مصدر ومنافذ تسريب البيانات فوراً (API endpoints / Cloud Buckets).",
+                "تغيير كافة مفاتيح الوصول والرموز البرمجية (API Keys & Access Tokens) الـمـنـكشفة.",
+                "حصر نطاق البيانات المسربة وتصنيف حساسيتها (PII / Financial Data).",
+                "إبلاغ فريق الامتثال والشؤون القانونية للالتزام بمتطلبات الإفصاح التنظيمي."
+            ],
+            "actions_en": [
+                "Block leaky data vectors and restrict public access to cloud storage buckets.",
+                "Revoke and rotate exposed secrets, API keys, and database credentials.",
+                "Perform data classification assessment on compromised datasets.",
+                "Notify legal and compliance officers for regulatory notification protocols."
+            ]
+        },
+        "هجمة حجب الخدمة (DDoS Attack)": {
+            "severity": "HIGH",
+            "protocol_ar": "تحويل المسار عبر خدمات التخفيف وتفعيل جدار حماية التطبيقات (WAF)",
+            "protocol_en": "ACTIVATE_DDoS_MITIGATION_AND_ENABLE_WAF_RATE_LIMITING",
+            "actions_ar": [
+                "تفعيل وضع الحماية القصوى وتحويل حركة المرور لشبكة التخفيف (Scrubbing Center).",
+                "تطبيق قواعد تحديد المعدل (Rate Limiting) على مستوى جدار حماية التطبيقات (WAF).",
+                "حظر مصادر الحركة المشبوهة وحزم البينات غير القياسية بناءً على أنماط الهجمة.",
+                "التواصل مع مزيد خدمة الإنترنت (ISP) لتصفية الحركة المرتفعة على مستوى النطاق."
+            ],
+            "actions_en": [
+                "Reroute incoming web traffic through cloud scrubbing proxy networks.",
+                "Enforce aggressive rate-limiting and Challenge-Response rules on WAF.",
+                "Drop malformed packets and block malicious IP subnets dynamically.",
+                "Coordinate upstream filtering with Tier-1 Internet Service Providers."
+            ]
+        }
+    }
+
+    # معالجة خطة الاستجابة
+    if incident_type in incident_database and generate_plan_btn:
+        plan_info = incident_database[incident_type]
+        
+        st.markdown(f"""
+        <div class="report-card">
+            <div class="report-title">خطة الاستجابة الفورية: {incident_type}</div>
+            <div style="margin-bottom: 8px;"><b>مستوى الخطورة:</b> <span class="badge-danger">{plan_info['severity']}</span></div>
+            <div style="margin-bottom: 8px;"><b>بروتوكول الاحتواء:</b> {plan_info['protocol_ar']}</div>
+            <div style="margin-top: 12px; font-weight: 600;">خطوات التنفيذ المباشرة الخاصة بالتكتيك:</div>
+            <div class="reasons-list">
+                <ul>
+                    {"".join([f"<li>{action}</li>" for action in plan_info['actions_ar']])}
+                </ul>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        tech_json = {
+            "incident_type": incident_type,
+            "severity_assessment": plan_info["severity"],
+            "containment_protocol": plan_info["protocol_en"],
+            "recommended_actions": plan_info["actions_en"]
+        }
+        with st.expander("عرض بيانات JSON التقنية"):
+            st.code(json.dumps(tech_json, indent=2), language="json")
 
     # معالجة تحليل الصور
     if uploaded_img:

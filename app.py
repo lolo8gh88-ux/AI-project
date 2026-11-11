@@ -12,7 +12,7 @@ st.set_page_config(
 
 css_code = """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap');
+    @import url('[https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap](https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap)');
     
     html, body, [class*="css"], .stApp {
         font-family: 'IBM Plex Sans Arabic', sans-serif;
@@ -146,6 +146,7 @@ if api_key:
     
     try:
         llm = ChatOpenAI(model="gpt-4o", temperature=0.1)
+        llm_json = ChatOpenAI(model="gpt-4o", temperature=0.1, model_kwargs={"response_format": {"type": "json_object"}})
     except Exception:
         st.error("يرجى التأكد من إدخال مفتاح API صحيح.")
 
@@ -181,24 +182,23 @@ if api_key:
         analyze_img_btn = st.button("بدء تحليل الصورة") if uploaded_img else None
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # معالجة ديناميكية حقيقية للخطة عبر الذكاء الاصطناعي
+    # معالجة آمنة وديناميكية لتوليد الخطط
     if incident_type != "اختر نوع الهجمة..." and generate_plan_btn:
         with st.spinner("جاري تحليل نوع الحادثة وتوليد الخطة المخصصة..."):
             prompt_inc = f"""
-            You are a senior Incident Response Expert. Generate a specific Incident Response plan for the threat: '{incident_type}'.
-            Output strictly a valid JSON object with NO markdown formatting, NO backticks.
-            JSON structure must be exactly:
+            Generate a JSON object for Incident Response plan regarding threat type: '{incident_type}'.
+            Required JSON structure:
             {{
                 "incident_type": "{incident_type}",
-                "severity_assessment": "HIGH or CRITICAL",
-                "containment_protocol": "Short English technical summary of containment",
+                "severity_assessment": "CRITICAL",
+                "containment_protocol": "Short English containment text",
                 "arabic_title": "عنوان الخطة بالعربي",
                 "arabic_protocol": "بروتوكول الاحتواء بالعربي",
                 "recommended_actions_ar": [
-                    "خطوة 1 بالتفصيل المباشر للهجمة",
-                    "خطوة 2 بالتفصيل المباشر للهجمة",
-                    "خطوة 3 بالتفصيل المباشر للهجمة",
-                    "خطوة 4 بالتفصيل المباشر للهجمة"
+                    "إجراء 1 بالعربي خاص بالتهديد",
+                    "إجراء 2 بالعربي خاص بالتهديد",
+                    "إجراء 3 بالعربي خاص بالتهديد",
+                    "إجراء 4 بالعربي خاص بالتهديد"
                 ],
                 "recommended_actions_en": [
                     "Step 1 in English",
@@ -208,9 +208,8 @@ if api_key:
             }}
             """
             try:
-                res_inc = llm.invoke(prompt_inc)
-                clean_json_str = res_inc.content.strip().replace("```json", "").replace("```", "")
-                inc_data = json.loads(clean_json_str)
+                res_inc = llm_json.invoke(prompt_inc)
+                inc_data = json.loads(res_inc.content)
                 
                 st.markdown(f"""
                 <div class="report-card">
@@ -235,7 +234,7 @@ if api_key:
                 with st.expander("عرض بيانات JSON التقنية"):
                     st.code(json.dumps(tech_json, indent=2), language="json")
             except Exception as e:
-                st.error("حدث خطأ أثناء الاتصال بالنموذج. يرجى إعادة المحاولة.")
+                st.error("تعذر جلب الخطة الديناميكية. تأكدي من صحة مفتاح OpenAI API المكتوب.")
 
     # معالجة تحليل الصور
     if uploaded_img:

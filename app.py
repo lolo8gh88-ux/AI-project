@@ -5,90 +5,75 @@ import streamlit as st
 from langchain_openai import ChatOpenAI
 
 st.set_page_config(
-    page_title="CyberAgent AI - Digital Shield",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    page_title="CyberAgent AI",
+    layout="centered",
+    initial_sidebar_state="collapsed"
 )
 
-# تطبيق الألوان والتصميم المستوحى من الواجهة النموذجية
+# تصميم عصري ونظيف وموحد بدون شريط جانبي مدمج ومرتب جداً
 css_code = """
     <style>
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap');
     
     html, body, [class*="css"], .stApp {
         font-family: 'IBM Plex Sans Arabic', sans-serif;
-        background-color: #F4F8F7;
-        color: #1A252C;
+        background-color: #F8FAFC;
+        color: #0F172A;
         direction: rtl;
         text-align: right;
     }
     
-    /* الشريط الجانبي الداكن */
-    [data-testid="stSidebar"] {
-        background-color: #0E1B2B !important;
-        color: #E2E8F0;
-    }
-    [data-testid="stSidebar"] * {
-        color: #E2E8F0 !important;
-    }
-    
-    .sidebar-brand {
-        font-size: 20px;
-        font-weight: 700;
-        color: #6366F1 !important;
-        margin-bottom: 2px;
-    }
-    .sidebar-sub {
-        font-size: 12px;
-        color: #94A3B8 !important;
-        margin-bottom: 20px;
-    }
-    
-    /* العناوين والبطاقات */
-    .dashboard-title {
-        font-size: 26px;
+    .header-title {
+        font-size: 28px;
         font-weight: 700;
         color: #0F172A;
+        text-align: center;
+        margin-top: 10px;
         margin-bottom: 4px;
     }
-    .dashboard-subtitle {
+    .header-subtitle {
         font-size: 14px;
         color: #64748B;
+        text-align: center;
         margin-bottom: 24px;
     }
     
-    .card-box {
+    .card-style {
         background-color: #FFFFFF;
         border: 1px solid #E2E8F0;
-        border-radius: 14px;
+        border-radius: 12px;
         padding: 20px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-        margin-bottom: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        height: 100%;
+        margin-bottom: 15px;
     }
     .card-header {
         font-size: 16px;
         font-weight: 700;
         color: #0F172A;
-        margin-bottom: 12px;
-        border-bottom: 1px solid #F1F5F9;
-        padding-bottom: 8px;
+        margin-bottom: 6px;
+    }
+    .card-desc {
+        font-size: 13px;
+        color: #64748B;
+        margin-bottom: 16px;
     }
     
-    /* التنبيهات والبطاقات التفاعلية */
     .report-card {
         background-color: #FFFFFF;
         border: 1px solid #CBD5E1;
         border-radius: 12px;
-        padding: 18px;
+        padding: 20px;
         margin-top: 15px;
         margin-bottom: 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     }
     .report-title {
         font-size: 16px;
         font-weight: 700;
         color: #0F172A;
-        border-bottom: 1px solid #E2E8F0;
-        padding-bottom: 8px;
+        border-bottom: 1px solid #F1F5F9;
+        padding-bottom: 10px;
         margin-bottom: 12px;
     }
     .badge-danger {
@@ -119,11 +104,10 @@ css_code = """
         color: #334155;
     }
     
-    /* الأزرار والحقول */
     .stButton>button {
-        background-color: #0E1B2B;
+        background-color: #2563EB;
         color: #FFFFFF !important;
-        border-radius: 10px;
+        border-radius: 8px;
         border: none;
         padding: 8px 16px;
         font-weight: 600;
@@ -131,37 +115,35 @@ css_code = """
         width: 100%;
     }
     .stButton>button:hover {
-        background-color: #1E293B;
-        color: #FFFFFF !important;
+        background-color: #1D4ED8;
     }
+    
+    /* جعل صندوق الشات ومربعات الإدخال باللون الفاتح الموحد */
     .stTextInput>div>div>input, .stSelectbox>div>div {
         background-color: #FFFFFF;
         color: #0F172A;
         border: 1px solid #CBD5E1;
         border-radius: 8px;
     }
+    [data-testid="stFileUploadDropzone"] {
+        background-color: #F8FAFC;
+        border: 1px dashed #CBD5E1;
+        border-radius: 8px;
+    }
     </style>
 """
 st.markdown(css_code, unsafe_allow_html=True)
 
-# الشريط الجانبي الداكن المستوحى من الصورة
-with st.sidebar:
-    st.markdown('<div class="sidebar-brand">CyberAgent AI</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sidebar-sub">Digital Shield Platform</div>', unsafe_allow_html=True)
-    st.divider()
-    st.markdown("**مساحة العمل**")
-    st.markdown("- نظرة عامة")
-    st.markdown("- اختيار خدمة")
-    st.markdown("- سجل الحوادث")
-    st.divider()
-    st.markdown("**إعدادات النظام**")
-    api_key = st.text_input("مفتاح التشغيل OpenAI API:", type="password")
+# العنوان الرئيسي المباشر والأنيق
+st.markdown('<div class="header-title">CyberAgent AI</div>', unsafe_allow_html=True)
+st.markdown('<div class="header-subtitle">المنصة الذكية لفحص التهديدات الأمنية والاستجابة الفورية للحوادث</div>', unsafe_allow_html=True)
+
+# مربع إعدادات المفتاح بال أعلى بشكل مرتّب وبدون تشتيت
+with st.expander("إعدادات مفتاح التشغيل (API Key)", expanded=False):
+    api_key = st.text_input("مفتاح OpenAI API:", type="password")
 
 if not api_key:
     api_key = os.environ.get("OPENAI_API_KEY", "")
-
-st.markdown('<div class="dashboard-title">ما الذي تريد مراجعته؟</div>', unsafe_allow_html=True)
-st.markdown('<div class="dashboard-subtitle">اختر مساراً أمنياً للمتابعة، وسيقوم المساعد الذكي بتحليل وتوليد التقارير المباشرة.</div>', unsafe_allow_html=True)
 
 if api_key:
     os.environ["OPENAI_API_KEY"] = api_key
@@ -171,14 +153,14 @@ if api_key:
     except Exception:
         st.error("يرجى التأكد من إدخال مفتاح API صحيح.")
 
-    # تقسيم الخدمات إلى بطاقات تفاعلية منظمة
+    # تقسيم الخدمات بطريقة متناسقة ونظيفة
     col1, col2 = st.columns(2)
 
     with col1:
         st.markdown("""
-        <div class="card-box">
-            <div class="card-header">01 / خطة الاستجابة السريعة للحوادث</div>
-            <p style="font-size: 13px; color: #64748B;">توليد بروتوكولات احتواء فورية عند وقوع هجمات أمنية.</p>
+        <div class="card-style">
+            <div class="card-header">01 / الاستجابة للحوادث</div>
+            <div class="card-desc">توليد بروتوكولات احتواء وتوصيات فورية.</div>
         """, unsafe_allow_html=True)
         incident_type = st.selectbox(
             "نوع الحادث الأمني:",
@@ -196,15 +178,15 @@ if api_key:
 
     with col2:
         st.markdown("""
-        <div class="card-box">
-            <div class="card-header">02 / تحليل الأدلة والصور (Vision AI)</div>
-            <p style="font-size: 13px; color: #64748B;">فحص بصرية محاولات التصيد والواجهات المشبوهة.</p>
+        <div class="card-style">
+            <div class="card-header">02 / تحليل الصور والأدلة (Vision AI)</div>
+            <div class="card-desc">فحص بصرية محاولات التصيد والرسائل المشبوهة.</div>
         """, unsafe_allow_html=True)
-        uploaded_img = st.file_uploader("اختر صورة للتحليل البصري", type=["png", "jpg", "jpeg"], key="img_uploader", label_visibility="collapsed")
+        uploaded_img = st.file_uploader("اختر صورة للتحليل", type=["png", "jpg", "jpeg"], key="img_uploader", label_visibility="collapsed")
         analyze_img_btn = st.button("بدء تحليل الصورة") if uploaded_img else None
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # معالجة خدمة الاستجابة للحوادث
+    # معالجة خطة الاستجابة
     if incident_type != "اختر نوع الهجمة..." and generate_plan_btn:
         inc_json = {
             "incident_type": incident_type,
@@ -237,9 +219,9 @@ if api_key:
         with st.expander("عرض بيانات JSON التقنية"):
             st.code(json.dumps(inc_json, indent=2), language="json")
 
-    # معالجة تحليل الصور Vision AI
+    # معالجة تحليل الصور
     if uploaded_img:
-        st.image(uploaded_img, caption="الصورة المرفوعة للفحص", width=320)
+        st.image(uploaded_img, caption="الصورة المرفوعة للفحص", width=300)
         if analyze_img_btn:
             vision_json = {
                 "analysis_type": "Visual Threat Inspection",
@@ -316,7 +298,6 @@ if api_key:
         except Exception:
             return {"error": "INVALID_INPUT"}
 
-    st.markdown('<div style="margin-top: 30px; font-weight: 700; font-size: 18px;">المساعد التفاعلي وفحص الروابط/المخاطر</div>', unsafe_allow_html=True)
     user_input = st.chat_input("اكتب سؤالك، أدخل رابطاً للفحص، أو اكتب أرقاماً لحساب درجة الخطورة...")
 
     if user_input:
@@ -378,4 +359,4 @@ if api_key:
             res = llm.invoke(f"أنت مساعد أمن سيبراني احترافي وبسيط. أجب بوضوح ومباشرة على: {user_input}")
             st.chat_message("assistant").write(res.content)
 else:
-    st.info("يرجى إدخال مفتاح OpenAI API في الشريط الجانبي لبدء استخدام التطبيق.")
+    st.info("يرجى إدخال مفتاح OpenAI API لبدء استخدام التطبيق.")
